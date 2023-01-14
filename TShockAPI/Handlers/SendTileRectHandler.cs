@@ -126,7 +126,7 @@ namespace TShockAPI.Handlers
 			if (args.Handled == true)
 			{
 				TSPlayer.All.SendTileRect(args.TileX, args.TileY, args.Width, args.Length);
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect reimplemented from carbonara from {0}", args.Player.Name);
+				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect reimplemented from carbonara from {args.Player.Name}"));
 			}
 		}
 
@@ -207,6 +207,7 @@ namespace TShockAPI.Handlers
 								case TileID.Plants:
 								case TileID.MinecartTrack:
 								case TileID.ChristmasTree:
+								case TileID.ShimmerMonolith:
 									{
 										// Allowed changes
 									}
@@ -289,13 +290,13 @@ namespace TShockAPI.Handlers
 			// More in depth checks should take place in handlers for the Place Object (79), Update Tile Entity (86), and Place Tile Entity (87) packets
 			if (!args.Player.HasBuildPermissionForTileObject(realX, realY, width, height))
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect rejected from no permission for tile object from {0}", args.Player.Name);
+				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from no permission for tile object from {args.Player.Name}"));
 				return;
 			}
 
 			if (TShock.TileBans.TileIsBanned((short)tileType))
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect rejected for banned tile");
+				TShock.Log.ConsoleDebug(GetString("Bouncer / SendTileRect rejected for banned tile"));
 				return;
 			}
 
@@ -350,9 +351,13 @@ namespace TShockAPI.Handlers
 				))
 			{
 				UpdateServerTileState(tile, newTile, TileDataType.Tile);
+				if (WorldGen.InWorld(realX, realY + 1) && TileID.Sets.IsVine[Main.tile[realX, realY + 1].type]) // vanilla does in theory break the vines on its own, but we can't trust that
+				{
+					WorldGen.KillTile(realX, realY + 1);
+				}
 			}
 
-			// Conversion: only sends a 1x1 rect
+			// Conversion: only sends a 1x1 rect; has to happen AFTER grass mowing as it would otherwise also let mowing through, but without fixing vines
 			if (rectWidth == 1 && rectLength == 1)
 			{
 				ProcessConversionSpreads(tile, newTile);
@@ -385,6 +390,19 @@ namespace TShockAPI.Handlers
 			}
 		}
 
+		// Moss and MossBrick are not used in conversion
+		private static List<bool[]> _convertibleTiles = typeof(TileID.Sets.Conversion)
+			.GetFields()
+			.ExceptBy(new[] { nameof(TileID.Sets.Conversion.Moss), nameof(TileID.Sets.Conversion.MossBrick) }, f => f.Name)
+			.Select(f => (bool[])f.GetValue(null))
+			.ToList();
+		// PureSand is only used in WorldGen.SpreadDesertWalls, which is server side
+		private static List<bool[]> _convertibleWalls = typeof(WallID.Sets.Conversion)
+			.GetFields()
+			.ExceptBy(new[] { nameof(WallID.Sets.Conversion.PureSand) }, f => f.Name)
+			.Select(f => (bool[])f.GetValue(null))
+			.ToList();
+
 		/// <summary>
 		/// Updates a single tile on the server if it is a valid conversion from one tile or wall type to another (eg stone -> corrupt stone)
 		/// </summary>
@@ -392,37 +410,43 @@ namespace TShockAPI.Handlers
 		/// <param name="newTile">The NetTile containing new tile properties</param>
 		internal void ProcessConversionSpreads(ITile tile, NetTile newTile)
 		{
-			// Update if the existing tile or wall is convertible and the new tile or wall is a valid conversion
-			if (
-				((TileID.Sets.Conversion.Stone[tile.type] || Main.tileMoss[tile.type]) && (TileID.Sets.Conversion.Stone[newTile.Type] || Main.tileMoss[newTile.Type])) ||
-				((tile.type == 0 || tile.type == 59) && (newTile.Type == 0 || newTile.Type == 59)) ||
-				TileID.Sets.Conversion.Grass[tile.type] && TileID.Sets.Conversion.Grass[newTile.Type] ||
-				TileID.Sets.Conversion.Ice[tile.type] && TileID.Sets.Conversion.Ice[newTile.Type] ||
-				TileID.Sets.Conversion.Sand[tile.type] && TileID.Sets.Conversion.Sand[newTile.Type] ||
-				TileID.Sets.Conversion.Sandstone[tile.type] && TileID.Sets.Conversion.Sandstone[newTile.Type] ||
-				TileID.Sets.Conversion.HardenedSand[tile.type] && TileID.Sets.Conversion.HardenedSand[newTile.Type] ||
-				TileID.Sets.Conversion.Thorn[tile.type] && TileID.Sets.Conversion.Thorn[newTile.Type] ||
-				TileID.Sets.Conversion.Moss[tile.type] && TileID.Sets.Conversion.Moss[newTile.Type] ||
-				TileID.Sets.Conversion.MossBrick[tile.type] && TileID.Sets.Conversion.MossBrick[newTile.Type]
-			)
+			var allowTile = false;
+			if (Main.tileMoss[tile.type] && TileID.Sets.Conversion.Stone[newTile.Type])
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect processing a tile conversion update - [{0}] -> [{1}]", tile.type, newTile.Type);
+				allowTile = true;
+			}
+			else if ((Main.tileMoss[tile.type] || TileID.Sets.Conversion.Stone[tile.type] || TileID.Sets.Conversion.Ice[tile.type] || TileID.Sets.Conversion.Sandstone[tile.type]) &&
+				(newTile.Type == TileID.Sandstone || newTile.Type == TileID.IceBlock))
+			{
+				// ProjectileID.SandSpray and ProjectileID.SnowSpray
+				allowTile = true;
+			}
+			else
+			{
+				foreach (var tileType in _convertibleTiles)
+				{
+					if (tileType[tile.type] && tileType[newTile.Type])
+					{
+						allowTile = true;
+						break;
+					}
+				}
+			}
+
+			if (allowTile)
+			{
+				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect processing a tile conversion update - [{tile.type}] -> [{newTile.Type}]"));
 				UpdateServerTileState(tile, newTile, TileDataType.Tile);
 			}
 
-			if (WallID.Sets.Conversion.Stone[tile.wall] && WallID.Sets.Conversion.Stone[newTile.Wall] ||
-				WallID.Sets.Conversion.Grass[tile.wall] && WallID.Sets.Conversion.Grass[newTile.Wall] ||
-				WallID.Sets.Conversion.Sandstone[tile.wall] && WallID.Sets.Conversion.Sandstone[newTile.Wall] ||
-				WallID.Sets.Conversion.HardenedSand[tile.wall] && WallID.Sets.Conversion.HardenedSand[newTile.Wall] ||
-				WallID.Sets.Conversion.PureSand[tile.wall] && WallID.Sets.Conversion.PureSand[newTile.Wall] ||
-				WallID.Sets.Conversion.NewWall1[tile.wall] && WallID.Sets.Conversion.NewWall1[newTile.Wall] ||
-				WallID.Sets.Conversion.NewWall2[tile.wall] && WallID.Sets.Conversion.NewWall2[newTile.Wall] ||
-				WallID.Sets.Conversion.NewWall3[tile.wall] && WallID.Sets.Conversion.NewWall3[newTile.Wall] ||
-				WallID.Sets.Conversion.NewWall4[tile.wall] && WallID.Sets.Conversion.NewWall4[newTile.Wall]
-			)
+			foreach (var wallType in _convertibleWalls)
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect processing a wall conversion update - [{0}] -> [{1}]", tile.wall, newTile.Wall);
-				UpdateServerTileState(tile, newTile, TileDataType.Wall);
+				if (wallType[tile.wall] && wallType[newTile.Wall])
+				{
+					TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect processing a wall conversion update - [{tile.wall}] -> [{newTile.Wall}]"));
+					UpdateServerTileState(tile, newTile, TileDataType.Wall);
+					break;
+				}
 			}
 		}
 
@@ -463,11 +487,15 @@ namespace TShockAPI.Handlers
 			if ((updateType & TileDataType.TilePaint) != 0)
 			{
 				tile.color(newTile.TileColor);
+				tile.fullbrightBlock(newTile.FullbrightBlock);
+				tile.invisibleBlock(newTile.InvisibleBlock);
 			}
 
 			if ((updateType & TileDataType.WallPaint) != 0)
 			{
 				tile.wallColor(newTile.WallColor);
+				tile.fullbrightWall(newTile.FullbrightWall);
+				tile.invisibleWall(newTile.InvisibleWall);
 			}
 
 			if ((updateType & TileDataType.Liquid) != 0)
@@ -546,27 +574,27 @@ namespace TShockAPI.Handlers
 		{
 			if (args.Player.HasPermission(Permissions.allowclientsideworldedit))
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect accepted clientside world edit from {0}", args.Player.Name);
+				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect accepted clientside world edit from {args.Player.Name}"));
 				args.Handled = false;
 				return true;
 			}
 
 			if (args.Width > 4 || args.Length > 4) // as of 1.4.3.6 this is the biggest size the client will send in any case
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect rejected from non-vanilla tilemod from {0}", args.Player.Name);
+				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from non-vanilla tilemod from {args.Player.Name}"));
 				return true;
 			}
 
 			if (args.Player.IsBouncerThrottled())
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect rejected from throttle from {0}", args.Player.Name);
+				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from throttle from {args.Player.Name}"));
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
 				return true;
 			}
 
 			if (args.Player.IsBeingDisabled())
 			{
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRect rejected from being disabled from {0}", args.Player.Name);
+				TShock.Log.ConsoleDebug(GetString($"Bouncer / SendTileRect rejected from being disabled from {args.Player.Name}"));
 				args.Player.SendTileRect(args.TileX, args.TileY, args.Length, args.Width);
 				return true;
 			}
@@ -598,7 +626,7 @@ namespace TShockAPI.Handlers
 					}
 				}
 
-				TShock.Log.ConsoleDebug("Bouncer / SendTileRectHandler - rejected tile object because object dimensions fall outside the tile rect (excessive size)");
+				TShock.Log.ConsoleDebug(GetString("Bouncer / SendTileRectHandler - rejected tile object because object dimensions fall outside the tile rect (excessive size)"));
 				return false;
 			}
 

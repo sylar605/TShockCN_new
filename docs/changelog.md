@@ -1,8 +1,73 @@
 # TShock for Terraria
 
-This is the rolling changelog for TShock for Terraria. Use past tense when adding new entries; sign your name off when you add or change something. This should primarily be things like user changes, not necessarily codebase changes unless it's really relevant or large.
+This is the rolling changelog for TShock for Terraria. Changes listed under "upcoming changes" are only available in experimental builds.
 
-## How to add a changelog entry
+<!-- ## How to add a changelog entry
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+ATTENTION MORTALS
+PLEASE READ ALL OF THE INSTRUCTIONS HERE
+IT IS SUPER ANNOYING TO HAVE TO FIX THE CHANGELOG EVERY SINGLE TIME BECAUSE NOBODY READS THESE
+Use past tense when adding new entries; sign your name off when you add or change something. This should primarily be things like user changes, not necessarily codebase changes unless it's really relevant or large.
+
 * Put your entry in terms of what you changed in the past mood. For example: "Changed the world by adding new grommets."
   * Not "fix" or "change".
   * The entry must start with a verb.
@@ -10,9 +75,93 @@ This is the rolling changelog for TShock for Terraria. Use past tense when addin
   * Write in complete sentences that are understandable by anyone who does not have experience programming, unless the change is related to programming.
   * Do not insert tabs into this file, under any circumstances, ever.
   * Do not forget to sign every line you change with your name. (@hakusaro)
-  * If there is no section called "Upcoming changes" below this line, please add one with `## Upcoming changes` as the first line, and then a bulleted item directly after with the first change.
+  * If there is no section called "Upcoming changes" below this line, please add one with `## Upcoming changes` as the first line, and then a bulleted item directly after with the first change. -->
 
 ## Upcoming changes
+* An additional option `pvpwithnoteam` is added at `PvPMode` to enable PVP with no team.(@CelestialAnarchy, #2617, @ATFGK)
+* Corrected and updated deserialization of the following packets (@ATFGK):
+  * `ProjectileNew`: Read the third `AI` value.
+    * Before this change, it was previously possible for the projectile damage limit to falsely trigger, such as when using the Terra Balde and Fire Gauntlet together.
+  * `PlayerSpawn`: Read the `NumberOfDeathsPVE` and `NumberOfDeathsPVP` values.
+    * Before this change, the `PlayerSpawnContext` was always read incorrectly, due to the values above being placed in the middle of the existing structure.
+  * `NpcTeleportPortal`: Read the NPC index as a `ushort` instead of a `byte`.
+  * `PlaceObject`: Read the `Random` value.
+    * Before this change, the `Direction` was always read incorrectly, due to the value above being placed in the middle of the existing structure.
+  * `Zones`: Read the `zone5` value.
+  * `PaintTile` and `PaintWall`: Read the `coatTile` and `coatWall` values.
+  * `PlayerHurtV2`: Read the `cooldownCounter` value.
+* Updated `SpawnMsg` to include the `NumberOfDeathsPVE` and `NumberOfDeathsPVP`, and allow them to be optionally used in `TSPlayer.Spawn`. (@ATFGK)
+* Added `WorldTileProvider` to the tshock config with values `default`, `constileation` or `heaptile`. This allows tile providers to be changed in environments where CLI args cannot be altered. See the documentation website for more info about these providers. (@SignatureBeef)
+* Updated the Utils.FindByIdOrName to follow same logic. Now fuzzy match fallback to `StartsWith` and then `Contains`. (@sgkoishi)
+* Added `ShadowCandle` and `BrainOfConfusionBuff` (BoC dodge buff) to the `PlayerAddBuffWhitelist` (@drunderscore)
+* Improved rejection message and code duplication in `OnPlayerBuff`. (@drunderscore)
+  * This will make it so Bouncer rejections regarding `PlayerAddBuff` will now always include the sender index, buff type, receiver index, and time in ticks, allowing much faster triage of buff whitelist issues.
+* Allowed Digging Molecart and bomb fish to break tiles and place tracks. (@sgkoishi)
+* Added built-in package management capabilities for plugins. (@pontaoski)
+* Fixed Super Sponge unable to absorb shimmer. (@sgkoishi, #2833)
+* Increased whitelisted duration of the Mighty Wind (`WindPushed`) buff (from sandstorms). (@drunderscore)
+* Allowed the Hellfire (`OnFire3`) buff. (@drunderscore)
+* Allowed Digging Molecart and bomb fish to break tiles and place tracks (@sgkoishi)
+* Initialized achievements and the `AchievementManager` on the server. This ensures that players cannot cause exceptions to be thrown, chat messages are always logged, and allows achievement names to be localized in the console. Also added a test case for this. (@drunderscore)
+* Allowed multiple test cases to be in TShock's test suite. (@drunderscore)
+* Fixed unable to use Purification/Evil Powder in jungle. (@sgkoishi)
+
+## TShock 5.1.3
+* Added support for Terraria 1.4.4.9 via OTAPI 3.1.20. (@SignatureBeef)
+
+## TShock 5.1.2
+* Added support for Terraria 1.4.4.8.1 via OTAPI 3.1.19. (@SignatureBeef)
+
+## TShock 5.1.1
+* Fixed item giving potentially dropping too many items. (@PotatoCider, @punchready)
+* Excluded GeoIP.dat from release bundle. (@SignatureBeef)
+* Added `TownSlimeRed` to `FishableNpcIDs` list, allowing it to be fished up. (@drunderscore)
+* Bump to Terraria 1.4.4.8 via OTAPI 3.1.18. (@hakusaro, @SignatureBeef)
+  * In this version of Terraria, `Main.maxBuffTypes` and other `maxWhateverTypes` fields have been removed. Their replacements are in `Terraria.ID.whateverID.Count`. TShock calls to these fields have been swapped in order to bring forward compatibility with Terraria 1.4.4.8.
+* In OTAPI 3.1.17, allowed Crystal Shard to grow. (@sgkoishi, @cc004, SignatureBeef/Open-Terraria-API#96)
+* Added permission for summoning Mechdusa, Deerclops and slime pet. (@sgkoishi, #2808)
+* Changed login to only restrict CC'd players during login whilst SSC is enabled. (@drunderscore)
+  * This change allows the config option `RequireLogin` to function usefully again when SSC is not enabled.
+* Changed `PlayerData.RestoreCharacter` to remove all buffs. (@drunderscore)
+  * Before this change, it was theoretically possible to smuggle buffs onto servers with SSC enabled, by using buff indexes past `22`.
+* Allowed Torch God's Favor to place different types of torches and campfires. (@sgkoishi, #2811)
+* Updated translations! Currently, the major projects are at the following completion rates:
+  * Chinese (93%)
+  * Portuguese, Brazilian (89%)
+  * Indonesian (89%)
+  * Russian (56%)
+  * Spanish (24%)
+  * toki pona (10%)
+  * Turkish (8%)
+  * For complete credits, see the table below.
+
+### Translation credits
+The following translators contributed changes from November 1, 2022 to November 9, 2022 (from TShock 5.0.0 to 5.1.0).
+
+|Contributor | Language | Translated words|
+|-----|-----|-----|
+|Shiva Goddess (ShivaGoddess) | Portuguese, Brazilian | 6979|
+|Ricko (Rickojp) | Portuguese, Brazilian | 3154|
+|RidnRaven (ridwankun2) | Indonesian | 2329|
+|Janet Blackquill (pontaoski) | toki pona | 1216|
+|SGKoishi | Chinese Simplified | 640|
+|Cristofer GamerTVH (cristoferherame) | Spanish | 622|
+|HDSeventh (hdseventh) | Indonesian | 315|
+|EMRE ÇELİK (emre0447) | Turkish | 312|
+|PHPoenX | Russian | 297|
+|./lemon.sh (lemon-sh) | Polish | 206|
+|Сергей Червяков (chsergeyg) | Russian | 182|
+|okaythisisepic | Russian | 80|
+|KomashiOFC | Portuguese, Brazilian | 76|
+|Runesicle | toki pona | 22|
+|Marotheit | Pirate English | 7|
+|ATFGK | Chinese Simplified | 4|
+
+## TShock 5.1.0
+
+This release was scrubbed. All changes have been re-allocated to the 5.1.1 release. We consider a verison "final" after the tick and do not apply more changes. Thus, we were unable to simply release 5.0.0 as-is, as a late-breaking bug was discovered and fixed after the tick.
+
+## TShock 5.0.0
 * Your changes could be here!
 * Reduced load/save console spam. (@SignatureBeef, @YehnBeep)
 * Replaced SQLite library with Microsoft.Data.Sqlite for arm64 support. (@SignatureBeef)
@@ -23,21 +172,109 @@ This is the rolling changelog for TShock for Terraria. Use past tense when addin
 * Added preliminary support for Terraria 1.4.4.4. (@SignatureBeef)
 * GrassSpreadEventArgs Color property has been changed from a Byte to a TileColorCache type. (@SignatureBeef)
 * SetDefaultsEventArgs now includes a nullable ItemVariant instance. (@SignatureBeef)
+* Use a string interpolation and escape single quotes when escaping tables. (@drunderscore)
+* Removed obsolete resource files `TShockAPI/Resources.resx` and `TShockAPI/Resources.Designer.cs`. (@Arthri)
+* Fixed hardcore and mediumcore not banning on death when settings are enabled. This also alters the TSPlayer.Ban method to remove the force option which is no longer needed. (@SignatureBeef)
+* Plugins and ./bin dependencies are now loaded relative to the launcher, this improves the use of startup files. (@SignatureBeef)
+* Added preliminary support for Terraria 1.4.4.5. (@drunderscore)
+  * For clarity sake, we're listing the individual changes to Terraria's version, despite the fact that this version only supports the latest one.
+* Don't allow players to sync loadout index whilst disabled. (@drunderscore)
+* Fixed painting wall/tile being rejected from hand of creation. (@Rozen4334)
+* Added a second `Utils.TryParseTime` method for parsing large, positive time spans. (@punchready)
+* Fixed `/tempgroup` breaking on durations greater than roughly 24 days. (@punchready)
+* Fixed player not being checked for permissions to use the Shellphone (Ocean), Shellphone (Underworld) and Shellphone (Spawn). (@hufang360)
+* Updated to OTAPI 3.1.10-alpha, which allows FreeBSD .NET 6 to use Re-Logic's Linux platform. (@SignatureBeef)
+* Updated Github CI to not tarball files for Windows only. (@PotatoCider)
+* Allow Blood Butcherer and Shimmer buffs to be applied to NPCs by players. (@drunderscore)
+* In OTAPI 3.1.11-alpha, chest stacking was fixed. (@SignatureBeef)
+* In OTAPI 3.1.12-alpha, "server world deletions" were fixed. (@SignatureBeef)
+* Fixed NetTile errors by implementing new packet read/write data. (@SignatureBeef)
+* Fixed Inferno Fork causing kick from rejected abnormal buff. (@Stealownz)
+* Prevented Server Broadcast from executing without a message. (@PackmanDude, @punchready)
+* Added `LiquidType.Shimmer`. (@drunderscore)
+* Made Bouncer allow Bottomless Honey Bucket usage. (@drunderscore)
+* Made Bouncer reject Shimmer placement without bucket or whilst banned. (@drunderscore)
+* Fixed Bouncer rejecting Explosive Bunny critter release when using the Bunny Cannon, if the player had since stopped selecting the Explosive Bunny. (@drunderscore)
+* Allowed breaking of tiles that are in `BreakableWhenPlacing` set. This will allow you to place tiles over other tiles (like piles) properly, without being rejected. (@drunderscore)
+* Allowed the Axe of Regrowth and the Rubblemaker to pass Bouncer checks. (@drunderscore)
+  * The Axe of Regrowth places a `Saplings` where a tree used to be, which previously failed.
+  * The Rubblemaker places rubble (which are echo piles), of varying styles, which previously failed.
+* Fixed `HandlePlayerAddBuff` data handler always being marked as `Handled`, and therefore never allowing the `PlayerAddBuff` to be sent to anyone. (@drunderscore)
+* Improved `OnPlayerBuff` logic to properly handle players adding buffs to other players. (@drunderscore)
+  * Check if the target ID is within bounds as the first thing to check.
+  * Check if the buff type being applied is within bounds.
+  * Introduce `AddPlayerBuffWhitelist` (replacing `WhitelistBuffMaxTime`), which allows us to specify the maximum amount of ticks a buff can be applied for, and if it can be applied without the target being in PvP.
+  * When rejecting from `OnPlayerBuff`, instead of sending a `PlayerAddBuff` packet with the rejected buff (essentially a no-op, as the sender implicitly applies the buff to the target, and causes desync as the buff was rejected), send a `PlayerBuff` to re-sync the target's buffs, without the buff we just rejected.
+* Added new tile provider. Use `-constileation` or `-c` to use it. Constileation is an alternative tile provider to Tiled and HeapTile. (@SignatureBeef)
+* Fixed an exploit with grass mowing not removing hanging vines. (@punchready)
+* Added `-additionalplugins` command line argument to load additional plugins. (@pontaoski)
+* Added localization support for console spam reduction. (@KawaiiYuyu)
+* Added an internationalization system. The base for the i18n system was built by Janet Blackquill ([@pontaoski](https://github.com/pontaoski)). A small donation in her honor was made to the [KDE project](https://kde.org/) as a thankyou for this work. This also includes the `TSHOCK_LANGUAGE` environment variable. Setting `TSHOCK_LANGUAGE=tok` will enable a small number of [Toki Pona](https://tokipona.org/) translations as a proof-of-concept. (@pontaoski)
+* Added support for Terraria 1.4.4.6, through OTAPI 3.1.5. (@SignatureBeef)
+* Added GeoIP.dat back to the included list of files. (@SignatureBeef)
+* Allow loadouts to properly sync by allowing the `SyncLoadout` packet during early connection. (@drunderscore)
+* Introduced support for loadouts, and saving the current loadout index to SSC. Both `NetItem` and `PlayerData` were modified to support this. (@drunderscore)
+* Introduced checking of loadout slots for hacked item stacks. (@drunderscore)
+* Fixed players being kicked after using the Flamethrower to apply the `OnFire3` debuff for `1200` ticks. (@BashGuy10)
+* Fixed being kicked for using the new sponge types on liquid. (@BashGuy10)
+* Fixed SSC not saving `ateArtisanBread`, `usedAegisCrystal`, `usedAegisFruit`, `usedArcaneCrystal`, `usedGalaxyPearl`, `usedGummyWorm`, `usedAmbrosia`, `unlockedSuperCart`, and `enabledSuperCart` data flags. (@hufang360)
+* Allowed flask buffs to be applied on town npc due to the Flymeal. Add a permission could skip the buff detection. (@KawaiiYuyu)
+* Dockerized TShock. (@PotatoCider)
+* Changed the log system to log the command itself without arguments if the command is not `DoLog`. (@sgkoishi, [#2779](https://github.com/Pryaxis/TShock/issues/2779))
+* Added ability for items given to players to be inserted directly into their inventory instead of spawned as an item drop. (@pontaoski)
+* Added support of `-lang` and `-language` flags for our i18n system. (@KawaiiYuyu)
+* Added support for Terraria 1.4.4.7 (OTAPI 3.1.16). (@drunderscore)
+* Added support for various languages, most notably Chinese (99% complete), Russian (57% complete), Indonesian (53% complete), and Spanish (21% complete). Thank you to the lovely contributors who were responsible for this [on Crowdin](https://crowdin.com/project/tshock):
+  * RidnRaven (ridwankun2)
+  * okaythisisepic
+  * xml3344 has stopped making trouble (1212122222)
+  * Axeel (AxeelAnder)
+  * SGKoishi
+  * Leader-txt (Leader_txt)
+  * Esteban Delgado (Kojirremer)
+  * Cai233
+  * Anzhelika (AnzhelikaO)
+  * VariolaX
+  * hufang 360 (hufang360)
+  * AgaSpace (Zoom L1) (agaspacel1)
+  * Killia0 (Killia)
+  * EMRE ÇELİK (emre0447)
+  * Marcus Persson (squidistaken)
+  * StarCloud-cy
+  * HDSeventh (hdseventh)
+  * JJJJGGGG12345
+  * xml3344
+  * Seele Vollerei (aaa1115910)
+  * 问心|MiaoVPS (WenXin_MiaoVPS)
+  * avlensa
+  * Sykhasamann (Syks)
+  * AndPlay
+  * TruffleToad
+  * kuaizhi
+  * Simone Caporale (caporalesimone)
+  * josefcorosado
+  * kuukiman
+  * Kronex (Kronex6)
+  * Jifeng
+  * Janet Blackquill (pontaoski)
+  * Yuiinar (Yuiinars)
+  * Muteduanxing
 
 ## TShock 4.5.18
-* Fixed `TSPlayer.GiveItem` not working if the player is in lava. (@gohjoseph)
+* Fixed `TSPlayer.GiveItem` not working if the player is in lava. (@PotatoCider)
 * Only allow using Teleportation Potions, Magic Conch, and Demon Conch whilst holding them. (@drunderscore)
 * Updated server startup language to be more clear when encountering a fatal startup error. Now, the server gives more context as to what happened so that there's a better chance of people being able to help themselves. (@hakusaro)
-* Added `-worldevil <type>` command line argument (@NotGeri)
+* Added `-worldevil <type>` command line argument. (@NotGeri)
 * Added PlayerHasBuildPermission hook to PlayerHooks. (@AnzhelikaO, @Killia0)
 * Fixed an exploit in which the Ice Block deletion allowance from the Ice Rod bypassed region protection, allowing for deleting all tiles in a protected region and/or replacing them with Ice Blocks. (@punchready)
 * Changed SendTileRect handling from a denylist to an allowlist with stricter checks. This prevents essentially all exploits involving this packet. Most notably this stops people from placing arbitrary tiles with arbitrary framing values, which are the root of most exploits. (@punchready)
 * Removed the config options `TileRectangleSizeThreshold` and `KickOnTileRectangleSizeThresholdBroken` because they are made obsolete by the new system, which will only allow valid rectangle sizes (at a maximum of only 4 by 4 tiles in 1.4.3.6). (@punchready)
 * Bumped Newtonsoft Json to 13.0.1. (@dependabot)
+* Allow the Cool Whip to apply `CoolWhipNPCDebuff` for `240` ticks, fixing abnormal NPC buff add rejects in Bouncer. (@drunderscore)
 
 ## TShock 4.5.17
-* Fixed duplicate characters (twins) after repeatedly logging in as the same character due to connection not being immediately closed during `NetHooks_NameCollision`. (@gohjoseph)
-* Fixed mobs not dropping picked up coins. (@gohjoseph)
+* Fixed duplicate characters (twins) after repeatedly logging in as the same character due to connection not being immediately closed during `NetHooks_NameCollision`. (@PotatoCider)
+* Fixed mobs not dropping picked up coins. (@PotatoCider)
 
 ## TShock 4.5.16
 * Added preliminary support for Terraria 1.4.3.6. (@SignatureBeef, @hakusaro)
@@ -524,7 +761,7 @@ Please note that the permissions previously tied to the removed commands are als
 * Updated ServerBroadcast hook to provide a NetworkText object. (@tylerjwatson)
 * Fixed levers and things not updating properly. (@deathcradle)
 * Deprecated PacketTypes.ChatText. Chat is now handled using the NetTextModule and packet 82. (@QuiCM, @Hakusaro)
-* Removed the -lang command-line flag from TShock. It is now a vanilla feature. (@Hakusaro)
+* Removed the -lang command-line flag from TShock. It is now a vanilla feature. (@hakusaro)
 
 ## TShock 4.3.23
 * Added evil type option during world creation (@mistzzt)

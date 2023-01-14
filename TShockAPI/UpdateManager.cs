@@ -80,11 +80,11 @@ namespace TShockAPI
 				string msg = ex.BuildExceptionString();
 				//Give the console a brief
 				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine($"UpdateManager warning: {msg}");
+				Console.WriteLine(GetString($"UpdateManager warning: {msg}"));
 				Console.ForegroundColor = ConsoleColor.Gray;
 				//And log the full exception
-				TShock.Log.Warn($"UpdateManager warning: {ex.ToString()}");
-				TShock.Log.ConsoleError("Retrying in 5 minutes.");
+				TShock.Log.Warn(GetString($"UpdateManager warning: {ex.ToString()}"));
+				TShock.Log.ConsoleError(GetString("Retrying in 5 minutes."));
 				CheckXMinutes = 5;
 			}
 		}
@@ -117,8 +117,7 @@ namespace TShockAPI
 				{
 					reason = "none";
 				}
-				throw new WebException("Update server did not respond with an OK. "
-					+ $"Server message: [error {resp.StatusCode}] {reason}");
+				throw new WebException(GetString($"Update server did not respond with an OK. Server message: [error {resp.StatusCode}] {reason}"));
 			}
 
 			string json = await resp.Content.ReadAsStringAsync();
@@ -129,13 +128,13 @@ namespace TShockAPI
 			{
 				return update;
 			}
-			
+
 			return null;
 		}
 
 		private void NotifyAdministrators(Dictionary<string, string> update)
 		{
-			var changes = update["changes"].Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+			var changes = update["changes"].Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			NotifyAdministrator(TSPlayer.Server, changes);
 			foreach (TSPlayer player in TShock.Players)
 			{
@@ -148,7 +147,7 @@ namespace TShockAPI
 
 		private void NotifyAdministrator(TSPlayer player, string[] changes)
 		{
-			player.SendMessage("The server is out of date. Latest version: ", Color.Red);
+			player.SendMessage(GetString("The server is out of date. Latest version: "), Color.Red);
 			for (int j = 0; j < changes.Length; j++)
 			{
 				player.SendMessage(changes[j], Color.Red);

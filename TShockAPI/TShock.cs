@@ -45,6 +45,10 @@ using TShockAPI.Localization;
 using TShockAPI.Configuration;
 using Terraria.GameContent.Creative;
 using System.Runtime.InteropServices;
+using MonoMod.Cil;
+using Terraria.Achievements;
+using Terraria.Initializers;
+using Terraria.UI.Chat;
 using TShockAPI.Modules;
 
 namespace TShockAPI
@@ -59,7 +63,7 @@ namespace TShockAPI
 		/// <summary>VersionNum - The version number the TerrariaAPI will return back to the API. We just use the Assembly info.</summary>
 		public static readonly Version VersionNum = Assembly.GetExecutingAssembly().GetName().Version;
 		/// <summary>VersionCodename - The version codename is displayed when the server starts. Inspired by software codenames conventions.</summary>
-		public static readonly string VersionCodename = "Audaciously Artistic";
+		public static readonly string VersionCodename = "Thank you, everyone, for your support of TShock all these years! <3";
 
 		/// <summary>SavePath - This is the path TShock saves its data in. This path is relative to the TerrariaServer.exe (not in ServerPlugins).</summary>
 		public static string SavePath = "tshock";
@@ -205,7 +209,7 @@ namespace TShockAPI
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
 				var osx = Path.Combine(Environment.CurrentDirectory, "runtimes", "osx-x64");
-				if(Directory.Exists(osx))
+				if (Directory.Exists(osx))
 					matches = Directory.GetFiles(osx, "*" + libraryName + "*", SearchOption.AllDirectories);
 			}
 			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -247,7 +251,6 @@ namespace TShockAPI
 		public override void Initialize()
 		{
 			string logFilename;
-			string logPathSetupWarning;
 
 			OTAPI.Hooks.Netplay.CreateTcpListener += (sender, args) =>
 			{
@@ -294,10 +297,7 @@ namespace TShockAPI
 				}
 				catch (Exception ex)
 				{
-					logPathSetupWarning =
-						"Could not apply the given log path / log format, defaults will be used. Exception details:\n" + ex;
-
-					ServerApi.LogWriter.PluginWriteLine(this, logPathSetupWarning, TraceLevel.Error);
+					ServerApi.LogWriter.PluginWriteLine(this, GetString("Could not apply the given log path / log format, defaults will be used. Exception details:\n{0}", ex), TraceLevel.Error);
 
 					// Problem with the log path or format use the default
 					logFilename = Path.Combine(LogPathDefault, now.ToString(LogFormatDefault) + ".log");
@@ -353,7 +353,7 @@ namespace TShockAPI
 
 				if (File.Exists(Path.Combine(SavePath, "tshock.pid")))
 				{
-					Log.ConsoleInfo(
+					Log.ConsoleInfo(GetString(
 						"TShock被异常关闭。请使用{0}exit 正常退出。", Commands.Specifier);
 					File.Delete(Path.Combine(SavePath, "tshock.pid"));
 				}
@@ -388,6 +388,19 @@ namespace TShockAPI
 					Geo = new GeoIPCountry(geoippath);
 
 				Log.ConsoleInfo("TShock {0} ({1}) 汉化版 Beta 1 正在运行。", Version, VersionCodename);
+				switch(Config.Settings.WorldTileProvider?.ToLower())
+				{
+					case "heaptile":
+						Log.ConsoleInfo(GetString($"Using {nameof(HeapTile)} for tile implementation"), TraceLevel.Info);
+						Main.tile = new TileProvider();
+						break;
+					case "constileation":
+						Log.ConsoleInfo(GetString($"Using {nameof(ConstileationProvider)} for tile implementation"), TraceLevel.Info);
+						Main.tile = new ConstileationProvider();
+						break;
+				}
+
+				Log.ConsoleInfo(GetString("TShock {0} ({1}) now running.", Version, VersionCodename));
 
 				ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit);
 				ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
@@ -420,13 +433,46 @@ namespace TShockAPI
 
 				EnglishLanguage.Initialize();
 
+				// The AchievementTagHandler expects Main.Achievements to be non-null, which is not normally the case on dedicated servers.
+				// When trying to parse an achievement chat tag, it will instead throw.
+				// The tag is parsed when calling ChatManager.ParseMessage, which is used in TShock when writing chat messages to the
+				// console. Our OnChat handler uses Utils.Broadcast, which will send the message to all connected clients, write the message
+				// to the console and the log. Due to the order of execution, the message ends up being sent to all connected clients, but
+				// throws whilst trying to write to the console, and never gets written to the log.
+				// To solve the issue, we make achievements available on the server, allowing the tag handler to work as expected, and
+				// even allowing the localization of achievement names to appear in the console.
+
+				if (Game != null)
+				{
+					// Initialize the AchievementManager, which is normally only done on clients.
+					Game._achievements = new AchievementManager();
+
+					IL.Terraria.Initializers.AchievementInitializer.Load += OnAchievementInitializerLoad;
+
+					// Actually call AchievementInitializer.Load, which is also normally only done on clients.
+					AchievementInitializer.Load();
+				}
+				else
+				{
+					// If we don't have a Game instance, then we'll just remove the achievement tag handler entirely. This will cause the
+					// raw tag to just be used instead (and not be localized), but still avoid all the issues outlined above.
+					ChatManager._handlers.Remove("a", out _);
+					ChatManager._handlers.Remove("achievement", out _);
+				}
+
 				ModuleManager.Initialise(new object[] { this });
 
 				if (Config.Settings.RestApiEnabled)
 					RestApi.Start();
 
-				Log.ConsoleInfo("自动保存 " + (Config.Settings.AutoSave ? "已开启" : "已关闭"));
-				Log.ConsoleInfo("自动备份 " + (Backups.Interval > 0 ? "已开启" : "已关闭"));
+				if (Config.Settings.AutoSave)
+					Log.ConsoleInfo(GetString("自动保存 已开启"));
+				else
+					Log.ConsoleInfo(GetString("自动保存 已关闭"));
+				if (Backups.Interval > 0)
+					Log.ConsoleInfo(GetString("自动备份 已开启"));
+				else
+					Log.ConsoleInfo(GetString("自动备份 已关闭"));
 
 				Initialized?.Invoke();
 
@@ -440,14 +486,21 @@ namespace TShockAPI
 				// handle if Log was not initialised
 				void SafeError(string message)
 				{
-					if(Log is not null) Log.ConsoleError(message);
+					if (Log is not null) Log.ConsoleError(message);
 					else Console.WriteLine(message);
 				};
-				SafeError("TShock encountered a problem from which it cannot recover. The following message may help diagnose the problem.");
-				SafeError("Until the problem is resolved, TShock will not be able to start (and will crash on startup).");
+				SafeError(GetString("TShock encountered a problem from which it cannot recover. The following message may help diagnose the problem."));
+				SafeError(GetString("Until the problem is resolved, TShock will not be able to start (and will crash on startup)."));
 				SafeError(ex.ToString());
 				Environment.Exit(1);
 			}
+		}
+
+		private static void OnAchievementInitializerLoad(ILContext il)
+		{
+			// Modify AchievementInitializer.Load to remove the Main.netMode == 2 check (occupies the first 4 IL instructions)
+			for (var i = 0; i < 4; i++)
+				il.Body.Instructions.RemoveAt(0);
 		}
 
 		protected void CrashReporter_HeapshotRequesting(object sender, EventArgs e)
@@ -470,6 +523,8 @@ namespace TShockAPI
 					Geo.Dispose();
 				}
 				SaveManager.Instance.Dispose();
+
+				IL.Terraria.Initializers.AchievementInitializer.Load -= OnAchievementInitializerLoad;
 
 				ModuleManager.Dispose();
 
@@ -581,7 +636,7 @@ namespace TShockAPI
 			{
 				if (player.IP == ip)
 				{
-					player.Kick("You logged in from the same IP.", true, true, null, true);
+					player.Kick(GetString("You logged in from the same IP."), true, true, null, true);
 					args.Handled = true;
 					return;
 				}
@@ -590,7 +645,7 @@ namespace TShockAPI
 					var ips = JsonConvert.DeserializeObject<List<string>>(player.Account.KnownIps);
 					if (ips.Contains(ip))
 					{
-						player.Kick("You logged in from another location.", true, true, null, true);
+						player.Kick(GetString("You logged in from another location."), true, true, null, true);
 						args.Handled = true;
 					}
 				}
@@ -717,10 +772,10 @@ namespace TShockAPI
 
 			tryingToShutdown = true;
 
-			Log.ConsoleInfo("Shutting down safely. To force shutdown, send SIGINT (CTRL + C) again.");
+			Log.ConsoleInfo(GetString("Shutting down safely. To force shutdown, send SIGINT (CTRL + C) again."));
 
 			// Perform a safe shutdown
-			TShock.Utils.StopServer(true, "Server console interrupted!");
+			TShock.Utils.StopServer(true, GetString("Server console interrupted!"));
 		}
 
 		/// <summary>HandleCommandLine - Handles the command line parameters passed to the server.</summary>
@@ -747,7 +802,7 @@ namespace TShockAPI
 						SavePath = path ?? "tshock";
 						if (path != null)
 						{
-							ServerApi.LogWriter.PluginWriteLine(this, "Config path has been set to " + path, TraceLevel.Info);
+							ServerApi.LogWriter.PluginWriteLine(this, GetString("Config path has been set to {0}", path), TraceLevel.Info);
 						}
 					})
 
@@ -757,7 +812,7 @@ namespace TShockAPI
 						if (path != null)
 						{
 							Main.WorldPath = path;
-							ServerApi.LogWriter.PluginWriteLine(this, "World path has been set to " + path, TraceLevel.Info);
+							ServerApi.LogWriter.PluginWriteLine(this, GetString("World path has been set to {0}", path), TraceLevel.Info);
 						}
 					})
 
@@ -767,7 +822,7 @@ namespace TShockAPI
 						if (path != null)
 						{
 							LogPath = path;
-							ServerApi.LogWriter.PluginWriteLine(this, "Log path has been set to " + path, TraceLevel.Info);
+							ServerApi.LogWriter.PluginWriteLine(this, GetString("Log path has been set to {0}", path), TraceLevel.Info);
 						}
 					})
 
@@ -780,7 +835,7 @@ namespace TShockAPI
 					{
 						if (!string.IsNullOrWhiteSpace(cfg))
 						{
-							ServerApi.LogWriter.PluginWriteLine(this, string.Format("Loading dedicated config file: {0}", cfg), TraceLevel.Verbose);
+							ServerApi.LogWriter.PluginWriteLine(this, GetString("Loading dedicated config file: {0}", cfg), TraceLevel.Verbose);
 							Main.instance.LoadDedConfig(cfg);
 						}
 					})
@@ -791,7 +846,7 @@ namespace TShockAPI
 						if (int.TryParse(p, out port))
 						{
 							Netplay.ListenPort = port;
-							ServerApi.LogWriter.PluginWriteLine(this, string.Format("Listening on port {0}.", port), TraceLevel.Verbose);
+							ServerApi.LogWriter.PluginWriteLine(this, GetString("Listening on port {0}.", port), TraceLevel.Verbose);
 						}
 					})
 
@@ -800,7 +855,7 @@ namespace TShockAPI
 						if (!string.IsNullOrWhiteSpace(world))
 						{
 							Main.instance.SetWorldName(world);
-							ServerApi.LogWriter.PluginWriteLine(this, string.Format("World name will be overridden by: {0}", world), TraceLevel.Verbose);
+							ServerApi.LogWriter.PluginWriteLine(this, GetString("World name will be overridden by: {0}", world), TraceLevel.Verbose);
 						}
 					})
 
@@ -810,7 +865,7 @@ namespace TShockAPI
 						if (IPAddress.TryParse(ip, out addr))
 						{
 							Netplay.ServerIP = addr;
-							ServerApi.LogWriter.PluginWriteLine(this, string.Format("Listening on IP {0}.", addr), TraceLevel.Verbose);
+							ServerApi.LogWriter.PluginWriteLine(this, GetString("Listening on IP {0}.", addr), TraceLevel.Verbose);
 						}
 						else
 						{
@@ -846,7 +901,7 @@ namespace TShockAPI
 							throw new InvalidOperationException("Invalid value given for command line argument \"-worldevil\".");
 					}
 
-					ServerApi.LogWriter.PluginWriteLine(this, String.Format("New worlds will be generated with the {0} world evil type!", value), TraceLevel.Verbose);
+					ServerApi.LogWriter.PluginWriteLine(this, GetString("New worlds will be generated with the {0} world evil type!", value), TraceLevel.Verbose);
 					WorldGen.WorldGenParam_Evil = worldEvil;
 				})
 
@@ -877,13 +932,13 @@ namespace TShockAPI
 							Netplay.ListenPort = port;
 							Config.Settings.ServerPort = port;
 							OverridePort = true;
-							Log.ConsoleInfo("Port overridden by startup argument. Set to " + port);
+							Log.ConsoleInfo(GetString("Port overridden by startup argument. Set to {0}", port));
 						}
 					})
 				.AddFlags(restTokenSet, (token) =>
 					{
 						RESTStartupTokens.Add(token, new SecureRest.TokenData { Username = "null", UserGroupName = "superadmin" });
-						Console.WriteLine("Startup parameter overrode REST token.");
+						Console.WriteLine(GetString("Startup parameter overrode REST token."));
 					})
 				.AddFlags(restEnableSet, (e) =>
 					{
@@ -891,7 +946,7 @@ namespace TShockAPI
 						if (bool.TryParse(e, out enabled))
 						{
 							Config.Settings.RestApiEnabled = enabled;
-							Console.WriteLine("Startup parameter overrode REST enable.");
+							Console.WriteLine(GetString("Startup parameter overrode REST enable."));
 						}
 					})
 				.AddFlags(restPortSet, (p) =>
@@ -900,7 +955,7 @@ namespace TShockAPI
 					if (int.TryParse(p, out restPort))
 					{
 						Config.Settings.RestApiPort = restPort;
-						Console.WriteLine("Startup parameter overrode REST port.");
+						Console.WriteLine(GetString("Startup parameter overrode REST port."));
 					}
 				})
 				.AddFlags(playerSet, (p) =>
@@ -909,7 +964,7 @@ namespace TShockAPI
 						if (int.TryParse(p, out slots))
 						{
 							Config.Settings.MaxSlots = slots;
-							Console.WriteLine("Startup parameter overrode maximum player slot configuration value.");
+							Console.WriteLine(GetString("Startup parameter overrode maximum player slot configuration value."));
 						}
 					});
 
@@ -933,19 +988,19 @@ namespace TShockAPI
 				//CLI defined password overrides a config password
 				if (!string.IsNullOrEmpty(Config.Settings.ServerPassword))
 				{
-					Log.ConsoleError("!!! The server password in config.json was overridden by the interactive prompt and will be ignored.");
+					Log.ConsoleError(GetString("!!! The server password in config.json was overridden by the interactive prompt and will be ignored."));
 				}
 
 				if (!Config.Settings.DisableUUIDLogin)
 				{
-					Log.ConsoleError("!!! UUID login is enabled. If a user's UUID matches an account, the server password will be bypassed.");
-					Log.ConsoleError("!!! > Set DisableUUIDLogin to true in the config file and /reload if this is a problem.");
+					Log.ConsoleError(GetString("!!! UUID login is enabled. If a user's UUID matches an account, the server password will be bypassed."));
+					Log.ConsoleError(GetString("!!! > Set DisableUUIDLogin to true in the config file and /reload if this is a problem."));
 				}
 
 				if (!Config.Settings.DisableLoginBeforeJoin)
 				{
-					Log.ConsoleError("!!! Login before join is enabled. Existing accounts can login & the server password will be bypassed.");
-					Log.ConsoleError("!!! > Set DisableLoginBeforeJoin to true in the config file and /reload if this is a problem.");
+					Log.ConsoleError(GetString("!!! Login before join is enabled. Existing accounts can login & the server password will be bypassed."));
+					Log.ConsoleError(GetString("!!! > Set DisableLoginBeforeJoin to true in the config file and /reload if this is a problem."));
 				}
 
 				_cliPassword = Netplay.ServerPassword;
@@ -956,19 +1011,19 @@ namespace TShockAPI
 			{
 				if (!string.IsNullOrEmpty(Config.Settings.ServerPassword))
 				{
-					Log.ConsoleInfo("A password for this server was set in config.json and is being used.");
+					Log.ConsoleInfo(GetString("A password for this server was set in config.json and is being used."));
 				}
 			}
 
 			if (!Config.Settings.DisableLoginBeforeJoin)
 			{
-				Log.ConsoleInfo("Login before join enabled. Users may be prompted for an account specific password instead of a server password on connect.");
+				Log.ConsoleInfo(GetString("Login before join enabled. Users may be prompted for an account specific password instead of a server password on connect."));
 			}
 
 			if (!Config.Settings.DisableUUIDLogin)
 			{
-				Log.ConsoleInfo("Login using UUID enabled. Users automatically login via UUID.");
-				Log.ConsoleInfo("A malicious server can easily steal a user's UUID. You may consider turning this option off if you run a public server.");
+				Log.ConsoleInfo(GetString("Login using UUID enabled. Users automatically login via UUID."));
+				Log.ConsoleInfo(GetString("A malicious server can easily steal a user's UUID. You may consider turning this option off if you run a public server."));
 			}
 
 			// Disable the auth system if "setup.lock" is present or a user account already exists
@@ -978,8 +1033,8 @@ namespace TShockAPI
 
 				if (File.Exists(Path.Combine(SavePath, "setup-code.txt")))
 				{
-					Log.ConsoleInfo("An account has been detected in the user database, but setup-code.txt is still present.");
-					Log.ConsoleInfo("TShock will now disable the initial setup system and remove setup-code.txt as it is no longer needed.");
+					Log.ConsoleInfo(GetString("An account has been detected in the user database, but setup-code.txt is still present."));
+					Log.ConsoleInfo(GetString("TShock will now disable the initial setup system and remove setup-code.txt as it is no longer needed."));
 					File.Delete(Path.Combine(SavePath, "setup-code.txt"));
 				}
 
@@ -994,8 +1049,8 @@ namespace TShockAPI
 				var r = new Random((int)DateTime.Now.ToBinary());
 				SetupToken = r.Next(100000, 10000000);
 				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine("To setup the server, join the game and type {0}setup {1}", Commands.Specifier, SetupToken);
-				Console.WriteLine("This token will display until disabled by verification. ({0}setup)", Commands.Specifier);
+				Console.WriteLine(GetString("To setup the server, join the game and type {0}setup {1}", Commands.Specifier, SetupToken));
+				Console.WriteLine(GetString("This token will display until disabled by verification. ({0}setup)", Commands.Specifier));
 				Console.ResetColor();
 				File.WriteAllText(Path.Combine(SavePath, "setup-code.txt"), SetupToken.ToString());
 			}
@@ -1003,9 +1058,9 @@ namespace TShockAPI
 			{
 				SetupToken = Convert.ToInt32(File.ReadAllText(Path.Combine(SavePath, "setup-code.txt")));
 				Console.ForegroundColor = ConsoleColor.Yellow;
-				Console.WriteLine("TShock Notice: setup-code.txt is still present, and the code located in that file will be used.");
-				Console.WriteLine("To setup the server, join the game and type {0}setup {1}", Commands.Specifier, SetupToken);
-				Console.WriteLine("This token will display until disabled by verification. ({0}setup)", Commands.Specifier);
+				Console.WriteLine(GetString("TShock Notice: setup-code.txt is still present, and the code located in that file will be used."));
+				Console.WriteLine(GetString("To setup the server, join the game and type {0}setup {1}", Commands.Specifier, SetupToken));
+				Console.WriteLine(GetString("This token will display until disabled by verification. ({0}setup)", Commands.Specifier));
 				Console.ResetColor();
 			}
 
@@ -1178,7 +1233,7 @@ namespace TShockAPI
 
 					if (player.HealOtherThreshold >= TShock.Config.Settings.HealOtherThreshold)
 					{
-						player.Disable("Reached HealOtherPlayer threshold", flags);
+						player.Disable(GetString("Reached HealOtherPlayer threshold"), flags);
 					}
 					if (player.HealOtherThreshold > 0)
 					{
@@ -1282,7 +1337,7 @@ namespace TShockAPI
 		{
 			if (ShuttingDown)
 			{
-				NetMessage.SendData((int)PacketTypes.Disconnect, args.Who, -1, NetworkText.FromLiteral("Server is shutting down..."));
+				NetMessage.SendData((int)PacketTypes.Disconnect, args.Who, -1, NetworkText.FromLiteral(GetString("Server is shutting down...")));
 				args.Handled = true;
 				return;
 			}
@@ -1465,8 +1520,8 @@ namespace TShockAPI
 					if (!Commands.HandleCommand(tsplr, text))
 					{
 						// This is required in case anyone makes HandleCommand return false again
-						tsplr.SendErrorMessage("Unable to parse command. Please contact an administrator for assistance.");
-						Log.ConsoleError("Unable to parse command '{0}' from player {1}.", text, tsplr.Name);
+						tsplr.SendErrorMessage(GetString("Unable to parse command. Please contact an administrator for assistance."));
+						Log.ConsoleError(GetString("Unable to parse command '{0}' from player {1}."), text, tsplr.Name);
 					}
 				}
 				catch (Exception ex)
@@ -1605,7 +1660,7 @@ namespace TShockAPI
 			}
 
 			if ((player.State < 10 || player.Dead) && (int)type > 12 && (int)type != 16 && (int)type != 42 && (int)type != 50 &&
-				(int)type != 38 && (int)type != 21 && (int)type != 22)
+				(int)type != 38 && (int)type != 21 && (int)type != 22 && type != PacketTypes.SyncLoadout)
 			{
 				e.Handled = true;
 				return;
@@ -1638,9 +1693,9 @@ namespace TShockAPI
 
 			if (Config.Settings.EnableGeoIP && TShock.Geo != null)
 			{
-				Log.Info("{0} ({1}) from '{2}' group from '{3}' joined. ({4}/{5})", player.Name, player.IP,
+				Log.Info(GetString("{0} ({1}) from '{2}' group from '{3}' joined. ({4}/{5})", player.Name, player.IP,
 									   player.Group.Name, player.Country, TShock.Utils.GetActivePlayerCount(),
-									   TShock.Config.Settings.MaxSlots);
+									   TShock.Config.Settings.MaxSlots));
 				if (!player.SilentJoinInProgress)
 					Utils.Broadcast(string.Format("{0} ({1}) 进入游戏。", player.Name, player.Country), Color.Yellow);
 			}
@@ -1658,7 +1713,7 @@ namespace TShockAPI
 			player.SendFileTextAsMessage(FileTools.MotdPath);
 
 			string pvpMode = Config.Settings.PvPMode.ToLowerInvariant();
-			if (pvpMode == "always")
+			if (pvpMode == "always" || pvpMode == "pvpwithnoteam")
 			{
 				player.TPlayer.hostile = true;
 				player.SendData(PacketTypes.TogglePvp, "", player.Index);
@@ -1670,7 +1725,7 @@ namespace TShockAPI
 				if (Main.ServerSideCharacter)
 				{
 					player.IsDisabledForSSC = true;
-					player.SendErrorMessage(String.Format("Server side characters is enabled! Please {0}register or {0}login to play!", Commands.Specifier));
+					player.SendErrorMessage(GetString("Server side characters is enabled! Please {0}register or {0}login to play!", Commands.Specifier));
 					player.LoginHarassed = true;
 				}
 				else if (Config.Settings.RequireLogin)

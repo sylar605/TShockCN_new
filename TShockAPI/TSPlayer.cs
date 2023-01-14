@@ -1,6 +1,6 @@
 ﻿/*
 TShock, a server mod for Terraria
-Copyright (C) 2011-2019 Pryaxis & TShock Contributors
+Copyright (C) 2011-2022 Pryaxis & TShock Contributors
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -386,6 +386,12 @@ namespace TShockAPI
 			Item[] safe = TPlayer.bank2.item;
 			Item[] forge = TPlayer.bank3.item;
 			Item[] voidVault = TPlayer.bank4.item;
+			Item[] loadout1Armor = TPlayer.Loadouts[0].Armor;
+			Item[] loadout1Dye = TPlayer.Loadouts[0].Dye;
+			Item[] loadout2Armor = TPlayer.Loadouts[1].Armor;
+			Item[] loadout2Dye = TPlayer.Loadouts[1].Dye;
+			Item[] loadout3Armor = TPlayer.Loadouts[2].Armor;
+			Item[] loadout3Dye = TPlayer.Loadouts[2].Dye;
 
 			Item trash = TPlayer.trashItem;
 			for (int i = 0; i < NetItem.MaxInventory; i++)
@@ -405,7 +411,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove item {0} ({1}) and then rejoin.", item.Name, inventory[i].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove item {0} ({1}) and then rejoin.", item.Name, inventory[i].stack));
 							}
 						}
 					}
@@ -425,7 +431,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove armor {0} ({1}) and then rejoin.", item.Name, armor[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove armor {0} ({1}) and then rejoin.", item.Name, armor[index].stack));
 							}
 						}
 					}
@@ -445,7 +451,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove dye {0} ({1}) and then rejoin.", item.Name, dye[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove dye {0} ({1}) and then rejoin.", item.Name, dye[index].stack));
 							}
 						}
 					}
@@ -465,7 +471,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove item {0} ({1}) and then rejoin.", item.Name, miscEquips[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove item {0} ({1}) and then rejoin.", item.Name, miscEquips[index].stack));
 							}
 						}
 					}
@@ -485,7 +491,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove item dye {0} ({1}) and then rejoin.", item.Name, miscDyes[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove item dye {0} ({1}) and then rejoin.", item.Name, miscDyes[index].stack));
 							}
 						}
 					}
@@ -506,7 +512,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove piggy-bank item {0} ({1}) and then rejoin.", item.Name, piggy[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove piggy-bank item {0} ({1}) and then rejoin.", item.Name, piggy[index].stack));
 							}
 						}
 					}
@@ -527,7 +533,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove safe item {0} ({1}) and then rejoin.", item.Name, safe[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove safe item {0} ({1}) and then rejoin.", item.Name, safe[index].stack));
 							}
 						}
 					}
@@ -547,7 +553,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove trash item {0} ({1}) and then rejoin.", item.Name, trash.stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove trash item {0} ({1}) and then rejoin.", item.Name, trash.stack));
 							}
 						}
 					}
@@ -568,7 +574,7 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove Defender's Forge item {0} ({1}) and then rejoin.", item.Name, forge[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove Defender's Forge item {0} ({1}) and then rejoin.", item.Name, forge[index].stack));
 							}
 						}
 					}
@@ -589,12 +595,131 @@ namespace TShockAPI
 							check = true;
 							if (shouldWarnPlayer)
 							{
-								SendErrorMessage("Stack cheat detected. Remove Void Vault item {0} ({1}) and then rejoin.", item.Name, voidVault[index].stack);
+								SendErrorMessage(GetString("Stack cheat detected. Remove Void Vault item {0} ({1}) and then rejoin.", item.Name, voidVault[index].stack));
 							}
 						}
 					}
 				}
+				else if (i < NetItem.Loadout1Armor.Item2)
+				{
+					var index = i - NetItem.Loadout1Armor.Item1;
+					Item item = new Item();
+					if (loadout1Armor[index] != null && loadout1Armor[index].netID != 0)
+					{
+						item.netDefaults(loadout1Armor[index].netID);
+						item.Prefix(loadout1Armor[index].prefix);
+						item.AffixName();
 
+						if (loadout1Armor[index].stack > item.maxStack || loadout1Armor[index].stack < 0)
+						{
+							check = true;
+							if (shouldWarnPlayer)
+							{
+								SendErrorMessage(GetString("Stack cheat detected. Remove Loadout 1 item {0} ({1}) and then rejoin.", item.Name, loadout1Armor[index].stack));
+							}
+						}
+					}
+				}
+				else if (i < NetItem.Loadout1Dye.Item2)
+				{
+					var index = i - NetItem.Loadout1Dye.Item1;
+					Item item = new Item();
+					if (loadout1Dye[index] != null && loadout1Dye[index].netID != 0)
+					{
+						item.netDefaults(loadout1Dye[index].netID);
+						item.Prefix(loadout1Dye[index].prefix);
+						item.AffixName();
+
+						if (loadout1Dye[index].stack > item.maxStack || loadout1Dye[index].stack < 0)
+						{
+							check = true;
+							if (shouldWarnPlayer)
+							{
+								SendErrorMessage(GetString("Stack cheat detected. Remove Loadout 1 item {0} ({1}) and then rejoin.", item.Name, loadout1Dye[index].stack));
+							}
+						}
+					}
+				}
+				else if (i < NetItem.Loadout2Armor.Item2)
+				{
+					var index = i - NetItem.Loadout2Armor.Item1;
+					Item item = new Item();
+					if (loadout2Armor[index] != null && loadout2Armor[index].netID != 0)
+					{
+						item.netDefaults(loadout2Armor[index].netID);
+						item.Prefix(loadout2Armor[index].prefix);
+						item.AffixName();
+
+						if (loadout2Armor[index].stack > item.maxStack || loadout2Armor[index].stack < 0)
+						{
+							check = true;
+							if (shouldWarnPlayer)
+							{
+								SendErrorMessage(GetString("Stack cheat detected. Remove Loadout 2 item {0} ({1}) and then rejoin.", item.Name, loadout2Armor[index].stack));
+							}
+						}
+					}
+				}
+				else if (i < NetItem.Loadout2Dye.Item2)
+				{
+					var index = i - NetItem.Loadout2Dye.Item1;
+					Item item = new Item();
+					if (loadout2Dye[index] != null && loadout2Dye[index].netID != 0)
+					{
+						item.netDefaults(loadout2Dye[index].netID);
+						item.Prefix(loadout2Dye[index].prefix);
+						item.AffixName();
+
+						if (loadout2Dye[index].stack > item.maxStack || loadout2Dye[index].stack < 0)
+						{
+							check = true;
+							if (shouldWarnPlayer)
+							{
+								SendErrorMessage(GetString("Stack cheat detected. Remove Loadout 2 item {0} ({1}) and then rejoin.", item.Name, loadout2Dye[index].stack));
+							}
+						}
+					}
+				}
+				else if (i < NetItem.Loadout3Armor.Item2)
+				{
+					var index = i - NetItem.Loadout3Armor.Item1;
+					Item item = new Item();
+					if (loadout3Armor[index] != null && loadout3Armor[index].netID != 0)
+					{
+						item.netDefaults(loadout3Armor[index].netID);
+						item.Prefix(loadout3Armor[index].prefix);
+						item.AffixName();
+
+						if (loadout3Armor[index].stack > item.maxStack || loadout3Armor[index].stack < 0)
+						{
+							check = true;
+							if (shouldWarnPlayer)
+							{
+								SendErrorMessage(GetString("Stack cheat detected. Remove Loadout 3 item {0} ({1}) and then rejoin.", item.Name, loadout3Armor[index].stack));
+							}
+						}
+					}
+				}
+				else if (i < NetItem.Loadout3Dye.Item2)
+				{
+					var index = i - NetItem.Loadout3Dye.Item1;
+					Item item = new Item();
+					if (loadout3Dye[index] != null && loadout3Dye[index].netID != 0)
+					{
+						item.netDefaults(loadout3Dye[index].netID);
+						item.Prefix(loadout3Dye[index].prefix);
+						item.AffixName();
+
+						if (loadout3Dye[index].stack > item.maxStack || loadout3Dye[index].stack < 0)
+						{
+							check = true;
+							if (shouldWarnPlayer)
+							{
+								SendErrorMessage(GetString("Stack cheat detected. Remove Loadout 3 item {0} ({1}) and then rejoin.", item.Name, loadout3Dye[index].stack));
+							}
+						}
+					}
+				}
 			}
 
 			return check;
@@ -630,7 +755,7 @@ namespace TShockAPI
 			int rgY = Math.Abs(TileY - y);
 			if (TShock.Config.Settings.RangeChecks && ((rgX > range) || (rgY > range)))
 			{
-				TShock.Log.ConsoleDebug("Rangecheck failed for {0} ({1}, {2}) (rg: {3}/{5}, {4}/{5})", Name, x, y, rgX, rgY, range);
+				TShock.Log.ConsoleDebug(GetString("Rangecheck failed for {0} ({1}, {2}) (rg: {3}/{5}, {4}/{5})", Name, x, y, rgX, rgY, range));
 				return false;
 			}
 			return true;
@@ -697,13 +822,13 @@ namespace TShockAPI
 				switch (failure)
 				{
 					case BuildPermissionFailPoint.GeneralBuild:
-						SendErrorMessage("You do not have permission to build on this server.");
+						SendErrorMessage(GetString("You do not have permission to build on this server."));
 						break;
 					case BuildPermissionFailPoint.SpawnProtect:
-						SendErrorMessage("You do not have permission to build in the spawn point.");
+						SendErrorMessage(GetString("You do not have permission to build in the spawn point."));
 						break;
 					case BuildPermissionFailPoint.Regions:
-						SendErrorMessage("You do not have permission to build in this region.");
+						SendErrorMessage(GetString("You do not have permission to build in this region."));
 						break;
 				}
 			}
@@ -856,7 +981,7 @@ namespace TShockAPI
 			get
 			{
 				return RealPlayer
-				       && (Netplay.Clients[Index] != null && Netplay.Clients[Index].IsActive && !Netplay.Clients[Index].PendingTermination);
+					   && (Netplay.Clients[Index] != null && Netplay.Clients[Index].IsActive && !Netplay.Clients[Index].PendingTermination);
 			}
 		}
 
@@ -941,7 +1066,7 @@ namespace TShockAPI
 			{
 				if (HasPermission(Permissions.bypassssc))
 				{
-					TShock.Log.ConsoleInfo("Skipping SSC save (due to tshock.ignore.ssc) for " + Account.Name);
+					TShock.Log.ConsoleInfo(GetString($"Skipping SSC save (due to tshock.ignore.ssc) for {Account.Name}"));
 					return true;
 				}
 				PlayerData.CopyCharacter(this);
@@ -1197,7 +1322,7 @@ namespace TShockAPI
 		/// <param name="args"></param>
 		public void TempGroupTimerElapsed(object sender, ElapsedEventArgs args)
 		{
-			SendWarningMessage("Your temporary group access has expired.");
+			SendWarningMessage(GetString("Your temporary group access has expired."));
 
 			tempGroup = null;
 			if (sender != null)
@@ -1269,7 +1394,9 @@ namespace TShockAPI
 		/// <param name="tiley">The Y coordinate.</param>
 		/// <param name="context">The PlayerSpawnContext.</param>
 		/// <param name="respawnTimer">The respawn timer, will be Player.respawnTimer if parameter is null.</param>
-		public void Spawn(int tilex, int tiley, PlayerSpawnContext context, int? respawnTimer = null)
+		/// <param name="numberOfDeathsPVE">The number of deaths PVE, will be TPlayer.numberOfDeathsPVE if parameter is null.</param>
+		/// <param name="numberOfDeathsPVP">The number of deaths PVP, will be TPlayer.numberOfDeathsPVP if parameter is null.</param>
+		public void Spawn(int tilex, int tiley, PlayerSpawnContext context, int? respawnTimer = null, short? numberOfDeathsPVE = null, short? numberOfDeathsPVP = null)
 		{
 			using (var ms = new MemoryStream())
 			{
@@ -1279,6 +1406,8 @@ namespace TShockAPI
 					TileX = (short)tilex,
 					TileY = (short)tiley,
 					RespawnTimer = respawnTimer ?? TShock.Players[Index].RespawnTimer * 60,
+					NumberOfDeathsPVE = numberOfDeathsPVE ?? (short)TPlayer.numberOfDeathsPVE,
+					NumberOfDeathsPVP = numberOfDeathsPVP ?? (short)TPlayer.numberOfDeathsPVP,
 					PlayerSpawnContext = context,
 				};
 				msg.PackFull(ms);
@@ -1336,7 +1465,7 @@ namespace TShockAPI
 		}
 
 		/// <summary>
-		/// Sends a rectangle of tiles at a location with the given length and width. 
+		/// Sends a rectangle of tiles at a location with the given length and width.
 		/// </summary>
 		/// <param name="x">The x coordinate the rectangle will begin at</param>
 		/// <param name="y">The y coordinate the rectangle will begin at</param>
@@ -1383,6 +1512,115 @@ namespace TShockAPI
 		/// <param name="stack">The item stack.</param>
 		/// <param name="prefix">The item prefix.</param>
 		public virtual void GiveItem(int type, int stack, int prefix = 0)
+		{
+			if (TShock.Config.Settings.GiveItemsDirectly)
+				GiveItemDirectly(type, stack, prefix);
+			else
+				GiveItemByDrop(type, stack, prefix);
+		}
+
+		private Item EmptySentinelItem = new Item();
+
+		private bool Depleted(Item item)
+			=> item.type == 0 || item.stack == 0;
+
+		private void GiveItemDirectly(int type, int stack, int prefix)
+		{
+			if (ItemID.Sets.IsAPickup[type] || !Main.ServerSideCharacter || this.IsDisabledForSSC)
+			{
+				GiveItemByDrop(type, stack, prefix);
+				return;
+			}
+
+			var item = new Item();
+			item.netDefaults(type);
+			item.stack = stack;
+			item.prefix = (byte)prefix;
+
+			if (item.IsACoin)
+				for (int slot = -4; slot < 50; slot++)
+					if (Depleted(item = GiveItemDirectly_FillIntoOccupiedSlot(item, slot < 0 ? slot + 54 : slot)))
+						return;
+
+			if (item.FitsAmmoSlot())
+				if (Depleted(item = GiveItem_FillAmmo(item)))
+					return;
+
+			for (int slot = 0; slot < 50; slot++)
+				if (Depleted(item = GiveItemDirectly_FillIntoOccupiedSlot(item, slot)))
+					return;
+
+			if (!item.IsACoin && item.useStyle != 0)
+				for (int slot = 0; slot < 10; slot++)
+					if (Depleted(item = GiveItemDirectly_FillEmptyInventorySlot(item, slot)))
+						return;
+
+			int lastSlot = item.IsACoin ? 54 : 50;
+			for (int slot = lastSlot - 1; slot >= 0; slot--)
+				if (Depleted(item = GiveItemDirectly_FillEmptyInventorySlot(item, slot)))
+					return;
+
+			// oh no, i can't give the rest of the items... guess i gotta spill it on the floor
+			GiveItemByDrop(item.type, item.stack, item.prefix);
+		}
+
+		private void SendItemSlotPacketFor(int slot)
+		{
+			int prefix = this.TPlayer.inventory[slot].prefix;
+			NetMessage.SendData(5, this.Index, -1, null, this.Index, slot, prefix, 0f, 0, 0, 0);
+		}
+
+		private Item GiveItem_FillAmmo(Item item)
+		{
+			var inv = this.TPlayer.inventory;
+
+			for (int i = 54; i < 58; i++)
+				if (Depleted(item = GiveItemDirectly_FillIntoOccupiedSlot(item, i)))
+					return EmptySentinelItem;
+
+			if (!item.CanFillEmptyAmmoSlot())
+				return item;
+
+			for (int i = 54; i < 58; i++)
+				if (GiveItemDirectly_FillEmptyInventorySlot(item, i) == EmptySentinelItem)
+					return EmptySentinelItem;
+
+			return item;
+		}
+
+		private Item GiveItemDirectly_FillIntoOccupiedSlot(Item item, int slot)
+		{
+			var inv = this.TPlayer.inventory;
+			if (inv[slot].type <= 0 || inv[slot].stack >= inv[slot].maxStack || !item.IsTheSameAs(inv[slot]))
+				return item;
+
+			if (item.stack + inv[slot].stack <= inv[slot].maxStack)
+			{
+				inv[slot].stack += item.stack;
+				SendItemSlotPacketFor(slot);
+				return EmptySentinelItem;
+			}
+
+			var newItem = item.DeepClone();
+			newItem.stack -= inv[slot].maxStack - inv[slot].stack;
+			inv[slot].stack = inv[slot].maxStack;
+			SendItemSlotPacketFor(slot);
+
+			return newItem;
+		}
+
+		private Item GiveItemDirectly_FillEmptyInventorySlot(Item item, int slot)
+		{
+			var inv = this.TPlayer.inventory;
+			if (inv[slot].type != 0)
+				return item;
+
+			inv[slot] = item;
+			SendItemSlotPacketFor(slot);
+			return EmptySentinelItem;
+		}
+
+		private void GiveItemByDrop(int type, int stack, int prefix)
 		{
 			int itemIndex = Item.NewItem(new EntitySource_DebugCommand(), (int)X, (int)Y, TPlayer.width, TPlayer.height, type, stack, true, prefix, true);
 			Main.item[itemIndex].playerIndexTheItemIsReservedFor = this.Index;
@@ -1597,7 +1835,7 @@ namespace TShockAPI
 			Main.player[Index].team = team;
 			NetMessage.SendData((int)PacketTypes.PlayerTeam, -1, -1, NetworkText.Empty, Index);
 		}
-		
+
 		/// <summary>
 		/// Sets the player's pvp.
 		/// </summary>
@@ -1646,11 +1884,11 @@ namespace TShockAPI
 					{
 						if (flags.HasFlag(DisableFlags.WriteToLog))
 						{
-							TShock.Log.ConsoleInfo("Player {0} has been disabled for {1}.", Name, reason);
+							TShock.Log.ConsoleInfo(GetString("Player {0} has been disabled for {1}.", Name, reason));
 						}
 						else
 						{
-							Server.SendInfoMessage("Player {0} has been disabled for {1}.", Name, reason);
+							Server.SendInfoMessage(GetString("Player {0} has been disabled for {1}.", Name, reason));
 						}
 					}
 
@@ -1682,15 +1920,14 @@ namespace TShockAPI
 				SilentKickInProgress = silent;
 				if (IsLoggedIn && saveSSI)
 					SaveServerCharacter();
-				Disconnect(string.Format("Kicked: {0}", reason));
-				TShock.Log.ConsoleInfo(string.Format("Kicked {0} for : '{1}'", Name, reason));
-				string verb = force ? "force " : "";
+				Disconnect(GetString("Kicked: {0}", reason));
+				TShock.Log.ConsoleInfo(GetString("Kicked {0} for : '{1}'", Name, reason));
 				if (!silent)
 				{
 					if (string.IsNullOrWhiteSpace(adminUserName))
-						TShock.Utils.Broadcast(string.Format("{0} was {1}kicked for '{2}'", Name, verb, reason.ToLower()), Color.Green);
+						TShock.Utils.Broadcast(GetString("{0} was kicked for '{1}'", Name, reason), Color.Green);
 					else
-						TShock.Utils.Broadcast(string.Format("{0} {1}kicked {2} for '{3}'", adminUserName, verb, Name, reason.ToLower()), Color.Green);
+						TShock.Utils.Broadcast(GetString("{0} kicked {1} for '{2}'", adminUserName, Name, reason), Color.Green);
 				}
 				return true;
 			}
@@ -1701,30 +1938,26 @@ namespace TShockAPI
 		/// Bans and disconnects the player from the server.
 		/// </summary>
 		/// <param name="reason">The reason to be displayed to the server.</param>
-		/// <param name="force">If the ban should bypass immunity to ban checks.</param>
 		/// <param name="adminUserName">The player who initiated the ban.</param>
-		public bool Ban(string reason, bool force = false, string adminUserName = null)
+		public bool Ban(string reason, string adminUserName = null)
 		{
 			if (!ConnectionAlive)
 				return true;
-			if (force)
-			{
-				TShock.Bans.InsertBan($"{Identifier.IP}{IP}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
-				TShock.Bans.InsertBan($"{Identifier.UUID}{UUID}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
-				if (Account != null)
-				{
-					TShock.Bans.InsertBan($"{Identifier.Account}{Account.Name}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
-				}
 
-				Disconnect(string.Format("Banned: {0}", reason));
-				string verb = force ? "force " : "";
-				if (string.IsNullOrWhiteSpace(adminUserName))
-					TSPlayer.All.SendInfoMessage("{0} was {1}banned for '{2}'.", Name, verb, reason);
-				else
-					TSPlayer.All.SendInfoMessage("{0} {1}banned {2} for '{3}'.", adminUserName, verb, Name, reason);
-				return true;
+			TShock.Bans.InsertBan($"{Identifier.IP}{IP}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
+			TShock.Bans.InsertBan($"{Identifier.UUID}{UUID}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
+			if (Account != null)
+			{
+				TShock.Bans.InsertBan($"{Identifier.Account}{Account.Name}", reason, adminUserName, DateTime.UtcNow, DateTime.MaxValue);
 			}
-			return false;
+
+			Disconnect(GetString("Banned: {0}", reason));
+
+			if (string.IsNullOrWhiteSpace(adminUserName))
+				TSPlayer.All.SendInfoMessage(GetString("{0} was banned for '{1}'.", Name, reason));
+			else
+				TSPlayer.All.SendInfoMessage(GetString("{0} banned {1} for '{2}'.", adminUserName, Name, reason));
+			return true;
 		}
 
 		/// <summary>
@@ -1734,13 +1967,13 @@ namespace TShockAPI
 		/// <param name="matches">An enumerable list with the matches</param>
 		public void SendMultipleMatchError(IEnumerable<object> matches)
 		{
-			SendErrorMessage("More than one match found -- unable to decide which is correct: ");
+			SendErrorMessage(GetString("More than one match found -- unable to decide which is correct: "));
 
 			var lines = PaginationTools.BuildLinesFromTerms(matches.ToArray());
 			lines.ForEach(SendInfoMessage);
 
-			SendErrorMessage("Use \"my query\" for items with spaces.");
-			SendErrorMessage("Use tsi:[number] or tsn:[username] to distinguish between user IDs and usernames.");
+			SendErrorMessage(GetString("Use \"my query\" for items with spaces."));
+			SendErrorMessage(GetString("Use tsi:[number] or tsn:[username] to distinguish between user IDs and usernames."));
 		}
 
 		[Conditional("DEBUG")]

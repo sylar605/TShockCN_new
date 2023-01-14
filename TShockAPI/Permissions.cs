@@ -155,6 +155,9 @@ namespace TShockAPI
 		[Description("Prevents your actions from being ignored if damage is too high.")]
 		public static readonly string ignoredamagecap = "tshock.ignore.damage";
 
+		[Description("Prevents your from being kicked by npc buff hack detection.")]
+		public static readonly string ignorenpcbuffdetection = "tshock.ignore.npcbuff";
+
 		[Description("Bypass server side character checks.")]
 		public static readonly string bypassssc = "tshock.ignore.ssc";
 
@@ -439,7 +442,7 @@ namespace TShockAPI
 
 		[Description("User can kill others.")]
 		public static readonly string kill = "tshock.kill";
-		
+
 		[Description("Player can respawn themselves.")]
 		public static readonly string respawn = "tshock.respawn";
 
@@ -524,7 +527,7 @@ namespace TShockAPI
 
 				var descattr =
 					field.GetCustomAttributes(false).FirstOrDefault(o => o is DescriptionAttribute) as DescriptionAttribute;
-				var desc = descattr != null && !string.IsNullOrWhiteSpace(descattr.Description) ? descattr.Description : "None";
+				var desc = descattr != null && !string.IsNullOrWhiteSpace(descattr.Description) ? descattr.Description : GetString("No description available.");
 
 				var commands = GetCommands(name);
 				foreach (var c in commands)
@@ -537,15 +540,15 @@ namespace TShockAPI
 				var strs =
 					commands.Select(
 						c =>
-						c.Name + (c.Names.Count > 1 ? "({0})".SFormat(string.Join(" ", c.Names.ToArray(), 1, c.Names.Count - 1)) : ""));
+						c.Name + (c.Names.Count > 1 ? " ({0})".SFormat(string.Join(" ", c.Names.ToArray(), 1, c.Names.Count - 1)) : ""));
 
-				sb.AppendLine("{0}".SFormat(name));
-				sb.AppendLine("Description: {0}  ".SFormat(desc));
-				sb.AppendLine("Commands: {0}  ".SFormat(strs.Count() > 0 ? string.Join(" ", strs) : "None"));
+				sb.AppendLine($"## {name}");
+				sb.AppendLine($"{desc}");
+				sb.AppendLine(GetString("* **Commands**: `{0}`", strs.Count() > 0 ? string.Join(", ", strs) : GetString("No associated commands.")));
 				sb.AppendLine();
 			}
 
-			File.WriteAllText("PermissionsDescriptions.txt", sb.ToString());
+			File.WriteAllText("docs/permission-descriptions.md", sb.ToString());
 		}
 	}
 }

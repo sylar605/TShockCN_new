@@ -7,11 +7,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '6.0.100'
 
@@ -25,13 +25,21 @@ jobs:
         arch: ["win-x64", "osx-x64", "linux-x64", "linux-arm64", "linux-arm"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '6.0.100'
+
+      - name: Install msgfmt
+        run: sudo apt-get install -y gettext
+
+      - name: Produce installer
+        run: |
+            cd TShockInstaller
+            dotnet publish -r ${{ matrix.arch }} -f net6.0 -c Release -p:PublishSingleFile=true --self-contained true
 
       - name: Produce build
         run: |
@@ -43,13 +51,27 @@ jobs:
         run: |
             chmod +x TShockLauncher/bin/Release/net6.0/${{ matrix.arch }}/publish/TShock.Server
 
+      - name: Copy installer
+        run: |
+            cp TShockInstaller/bin/Release/net6.0/${{ matrix.arch }}/publish/* TShockLauncher/bin/Release/net6.0/${{ matrix.arch }}/publish/
+
       # preserve file perms: https://github.com/actions/upload-artifact#maintaining-file-permissions-and-case-sensitive-files
-      - name: Archive artifact
+      - name: Tarball artifact (non-Windows)
+        if: ${{ matrix.arch != 'win-x64' }}
         run: |
             cd TShockLauncher/bin/Release/net6.0/${{ matrix.arch }}/publish/
             tar -cvf ../../../../../../TShock-Beta-${{ matrix.arch }}-Release.tar *
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload artifact (non-Windows)
+        uses: actions/upload-artifact@v3
+        if: ${{ matrix.arch != 'win-x64' }}
         with:
           name: TShock-Beta-${{ matrix.arch }}-Release
           path: TShock-Beta-${{ matrix.arch }}-Release.tar
+
+      - name: Upload artifact (Windows)
+        uses: actions/upload-artifact@v3
+        if: ${{ matrix.arch == 'win-x64' }}
+        with:
+          name: TShock-Beta-${{ matrix.arch }}-Release
+          path: TShockLauncher/bin/Release/net6.0/${{ matrix.arch }}/publish/

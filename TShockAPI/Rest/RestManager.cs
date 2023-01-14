@@ -155,7 +155,7 @@ namespace TShockAPI
 		/// <summary>
 		/// Creates a new instance of <see cref="Token"/>
 		/// </summary>
-		public Token() : base("token", true, "The REST authentication token.", typeof(String)) { }
+		public Token() : base("token", true, GetString("The REST authentication token."), typeof(String)) { }
 	}
 
 	/// <summary>
@@ -665,10 +665,10 @@ namespace TShockAPI
 					player.Kick(reason, true);
 				}
 
-				return RestResponse($"Ban added. Ticket number: {banResult.Ban.TicketNumber}");
+				return RestResponse(GetString($"Ban added. Ticket number: {banResult.Ban.TicketNumber}"));
 			}
 
-			return RestError($"Failed to add ban. {banResult.Message}", status: "500");
+			return RestError(GetString($"Failed to add ban. {banResult.Message}"), status: "500");
 		}
 
 		[Description("Delete an existing ban entry.")]
@@ -692,10 +692,10 @@ namespace TShockAPI
 
 			if (TShock.Bans.RemoveBan(ticketNumber, fullDelete))
 			{
-				return RestResponse("Ban removed.");
+				return RestResponse(GetString("Ban removed."));
 			}
 
-			return RestError("Failed to remove ban.", status: "500");
+			return RestError(GetString("Failed to remove ban."), status: "500");
 		}
 
 		[Description("View the details of a specific ban.")]
@@ -718,7 +718,7 @@ namespace TShockAPI
 
 			if (ban == null)
 			{
-				return RestResponse("No matching bans found.");
+				return RestResponse(GetString("No matching bans found."));
 			}
 
 			return new RestObject
@@ -777,7 +777,7 @@ namespace TShockAPI
 				return RestInvalidParam("state");
 			TShock.Config.Settings.AutoSave = autoSave;
 
-			var resp = RestResponse("AutoSave has been set to " + autoSave);
+			var resp = RestResponse($"AutoSave has been set to {autoSave}");
 			resp.Add("upgrade", "/v3/world/autosave");
 			return resp;
 		}
@@ -791,11 +791,25 @@ namespace TShockAPI
 			bool autoSave;
 			if (!bool.TryParse(args.Parameters["state"], out autoSave))
 			{
-				return RestResponse($"Autosave is currently {(TShock.Config.Settings.AutoSave ? "enabled" : "disabled")}");
+				if (TShock.Config.Settings.AutoSave)
+				{
+					return RestResponse(GetString($"Autosave is currently enabled"));
+				}
+				else
+				{
+					return RestResponse(GetString($"Autosave is currently disabled"));
+				}
 			}
 			TShock.Config.Settings.AutoSave = autoSave;
 
-			return RestResponse($"AutoSave has been {(TShock.Config.Settings.AutoSave ? "enabled" : "disabled")}");
+			if (TShock.Config.Settings.AutoSave)
+			{
+				return RestResponse(GetString($"AutoSave has been enabled"));
+			}
+			else
+			{
+				return RestResponse(GetString($"AutoSave has been disabled"));
+			}
 		}
 
 		[Description("Save the world.")]
@@ -830,7 +844,7 @@ namespace TShockAPI
 				}
 			}
 
-			return RestResponse(killcount + " NPCs have been killed");
+			return RestResponse(GetPluralString("{0} NPC has been killed.", "{0} NPCs have been killed.", killcount, killcount));
 		}
 
 		[Description("Get information regarding the world.")]
@@ -857,7 +871,7 @@ namespace TShockAPI
 		{
 			WorldGen.spawnMeteor = false;
 			WorldGen.dropMeteor();
-			return RestResponse("Meteor has been spawned");
+			return RestResponse(GetString("Meteor has been spawned"));
 		}
 
 		[Description("Toggle the status of blood moon.")]
@@ -872,7 +886,7 @@ namespace TShockAPI
 				return RestInvalidParam("bloodmoon");
 			Main.bloodMoon = bloodmoon;
 
-			var resp = RestResponse("Blood Moon has been set to " + bloodmoon);
+			var resp = RestResponse(GetString($"Blood Moon has been set to {bloodmoon}"));
 			resp.Add("upgrade", "/v3/world/bloodmoon");
 			return resp;
 		}
@@ -887,11 +901,18 @@ namespace TShockAPI
 			bool bloodmoon;
 			if (!bool.TryParse(args.Verbs["state"], out bloodmoon))
 			{
-				return RestResponse($"Bloodmoon state: {(Main.bloodMoon ? "Enabled" : "Disabled")}");
+				return RestResponse(GetString($"Bloodmoon state: {(Main.bloodMoon ? "Enabled" : "Disabled")}"));
 			}
 			Main.bloodMoon = bloodmoon;
 
-			return RestResponse($"Blood Moon has been {(Main.bloodMoon ? "enabled" : "disabled")}");
+			if (Main.bloodMoon)
+			{
+				return RestResponse($"Blood Moon has been enabled");
+			}
+			else
+			{
+				return RestResponse($"Blood Moon has been disabled");
+			}
 		}
 
 		#endregion
@@ -1025,8 +1046,8 @@ namespace TShockAPI
 				return ret;
 
 			TSPlayer player = (TSPlayer)ret;
-			player.Kick(null == args.Parameters["reason"] ? "Kicked via web" : args.Parameters["reason"], false, true, null, true);
-			return RestResponse("Player " + player.Name + " was kicked");
+			player.Kick(null == args.Parameters["reason"] ? GetString("Kicked via web") : args.Parameters["reason"], false, true, null, true);
+			return RestResponse($"Player {player.Name} was kicked");
 		}
 
 		[Description("Kill a player.")]
@@ -1044,8 +1065,8 @@ namespace TShockAPI
 			TSPlayer player = (TSPlayer)ret;
 			player.DamagePlayer(999999);
 			var from = string.IsNullOrWhiteSpace(args.Parameters["from"]) ? "Server Admin" : args.Parameters["from"];
-			player.SendInfoMessage(string.Format("{0} just killed you!", from));
-			return RestResponse("Player " + player.Name + " was killed");
+			player.SendInfoMessage(GetString($"{from} just killed you!"));
+			return RestResponse(GetString($"Player {player.Name} was killed"));
 		}
 
 		#endregion
@@ -1109,7 +1130,7 @@ namespace TShockAPI
 				return RestError(e.Message);
 			}
 
-			return RestResponse("Group '" + group.Name + "' deleted successfully");
+			return RestResponse(GetString($"Group {group.Name} deleted successfully"));
 		}
 
 		[Description("Create a new group.")]
@@ -1134,7 +1155,7 @@ namespace TShockAPI
 				return RestError(e.Message);
 			}
 
-			return RestResponse("Group '" + name + "' created successfully");
+			return RestResponse(GetString($"Group {name} created successfully"));
 		}
 
 		[Route("/v2/groups/update")]
@@ -1163,13 +1184,14 @@ namespace TShockAPI
 				return RestError(e.Message);
 			}
 
-			return RestResponse("Group '" + group.Name + "' updated successfully");
+			return RestResponse(GetString($"Group {group.Name} updated successfully"));
 		}
 
 		#endregion
 
 		#region Utility Methods
 
+		// TODO: figure out how to localise the route descriptions
 		public static void DumpDescriptions()
 		{
 			var sb = new StringBuilder();
@@ -1189,45 +1211,52 @@ namespace TShockAPI
 
 				if (descattr != null && !string.IsNullOrWhiteSpace(descattr.Description) && routeattr != null && !string.IsNullOrWhiteSpace(routeattr.Route))
 				{
-					sb.AppendLine("{0}  ".SFormat(name));
-					sb.AppendLine("Description: {0}  ".SFormat(descattr.Description));
+					sb.AppendLine("## {0}".SFormat(name));
+					sb.AppendLine("{0}".SFormat(descattr.Description));
 
 					var permission = method.GetCustomAttributes(false).Where(o => o is Permission);
 					if (permission.Count() > 0)
 					{
-						sb.AppendLine("Permissions: {0}".SFormat(String.Join(", ", permission.Select(p => ((Permission)p).Name))));
+						sb.AppendLine(GetString("* **Permissions**: `{0}`", String.Join(", ", permission.Select(p => ((Permission)p).Name))));
 					}
 					else
 					{
-						sb.AppendLine("No special permissions are required for this route.");
+						sb.AppendLine(GetString("No special permissions are required for this route."));
 					}
-
+					sb.AppendLine();
 					var verbs = method.GetCustomAttributes(false).Where(o => o is Verb);
 					if (verbs.Count() > 0)
 					{
-						sb.AppendLine("Verbs:");
+						sb.AppendLine(GetString("**Verbs**:"));
 						foreach (Verb verb in verbs)
 						{
-							sb.AppendLine("\t{0}({1}) [{2}] - {3}".SFormat(verb.Name, verb.Required ? "Required" : "Optional", verb.ArgumentType.Name, verb.Description));
+							if (verb.Required)
+								sb.AppendLine(GetString("* `{0}` (Required) `{1}` - {2}".SFormat(verb.Name, verb.ArgumentType.Name, verb.Description)));
+							else
+								sb.AppendLine(GetString("* `{0}` (Optional) `{1}` - {2}".SFormat(verb.Name, verb.ArgumentType.Name, verb.Description)));
 						}
 					}
-
+					sb.AppendLine();
 					var nouns = method.GetCustomAttributes(false).Where(o => o is Noun);
 					if (nouns.Count() > 0)
 					{
-						sb.AppendLine("Nouns:");
+						sb.AppendLine(GetString("**Nouns**:"));
 						foreach (Noun noun in nouns)
 						{
-							sb.AppendLine("\t{0}({1}) [{2}] - {3}".SFormat(noun.Name, noun.Required ? "Required" : "Optional", noun.ArgumentType.Name, noun.Description));
+							if (noun.Required)
+								sb.AppendLine(GetString("* `{0}` (Required) `{1}` - {2}".SFormat(noun.Name, noun.ArgumentType.Name, noun.Description)));
+							else
+								sb.AppendLine(GetString("* `{0}` (Optional) `{1}` - {2}".SFormat(noun.Name, noun.ArgumentType.Name, noun.Description)));
 						}
 					}
-					sb.AppendLine("Example Usage: {0}?{1}".SFormat(routeattr.Route,
+					sb.AppendLine();
+					sb.AppendLine(GetString("**Example Usage**: `{0}?{1}`", routeattr.Route,
 						string.Join("&", nouns.Select(n => String.Format("{0}={0}", ((Noun)n).Name)))));
 					sb.AppendLine();
 				}
 			}
 
-			File.WriteAllText("RestDescriptions.txt", sb.ToString());
+			File.WriteAllText("docs/rest-fields.md", sb.ToString());
 		}
 
 		private RestObject RestError(string message, string status = "400")
@@ -1242,7 +1271,7 @@ namespace TShockAPI
 
 		private RestObject RestMissingParam(string var)
 		{
-			return RestError("Missing or empty " + var + " parameter");
+			return RestError(GetString($"Missing or empty {var} parameter"));
 		}
 
 		private RestObject RestMissingParam(params string[] vars)
@@ -1252,7 +1281,7 @@ namespace TShockAPI
 
 		private RestObject RestInvalidParam(string var)
 		{
-			return RestError("Missing or invalid " + var + " parameter");
+			return RestError(GetString($"Missing or invalid {var} parameter"));
 		}
 
 		private bool GetBool(string val, bool def)
@@ -1273,9 +1302,9 @@ namespace TShockAPI
 				case 1:
 					return found[0];
 				case 0:
-					return RestError("Player " + name + " was not found");
+					return RestError(GetString($"Player {name} was not found"));
 				default:
-					return RestError("Player " + name + " matches " + found.Count + " players");
+					return RestError(GetPluralString($"Player {name} matches {found.Count} player", $"Player {name} matches {found.Count} players", found.Count));
 			}
 		}
 
@@ -1300,7 +1329,7 @@ namespace TShockAPI
 						account = TShock.UserAccounts.GetUserAccountByID(Convert.ToInt32(name));
 						break;
 					default:
-						return RestError("Invalid Type: '" + type + "'");
+						return RestError(GetString($"Invalid Type: '{type}'"));
 				}
 			}
 			catch (Exception e)
@@ -1309,7 +1338,7 @@ namespace TShockAPI
 			}
 
 			if (null == account)
-				return RestError(String.Format("User {0} '{1}' doesn't exist", type, name));
+				return RestError(GetString($"User {type} '{name}' doesn't exist"));
 
 			return account;
 		}
@@ -1322,7 +1351,7 @@ namespace TShockAPI
 
 			var group = TShock.Groups.GetGroupByName(name);
 			if (null == group)
-				return RestError("Group '" + name + "' doesn't exist");
+				return RestError(GetString($"Group {name} doesn't exist"));
 
 			return group;
 		}
@@ -1359,9 +1388,16 @@ namespace TShockAPI
 
 			TSPlayer player = (TSPlayer)ret;
 			player.mute = mute;
-			var verb = mute ? "muted" : "unmuted";
-			player.SendInfoMessage("You have been remotely " + verb);
-			return RestResponse("Player " + player.Name + " was " + verb);
+			if (mute)
+			{
+				player.SendInfoMessage(GetString("You have been remotely muted"));
+				return RestResponse(GetString($"Player {player.Name} has been muted"));
+			}
+			else
+			{
+				player.SendInfoMessage(GetString("You have been remotely unmmuted"));
+				return RestResponse(GetString($"Player {player.Name} has been unmuted"));
+			}
 		}
 
 		#endregion

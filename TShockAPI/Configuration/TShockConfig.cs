@@ -55,6 +55,10 @@ namespace TShockAPI.Configuration
 		[Description("Allows stacks in chests to go beyond the stack limit during world loading.")]
 		public bool IgnoreChestStacksOnLoad = false;
 
+		/// <summary>Allows changing of the default world tile provider.</summary>
+		[Description("Allows changing of the default world tile provider.")]
+		public string WorldTileProvider = "default";
+
 		#endregion
 
 
@@ -109,8 +113,8 @@ namespace TShockAPI.Configuration
 		[Description("Enables never ending invasion events. You still need to start the event, such as with the /invade command.")]
 		public bool InfiniteInvasion;
 
-		/// <summary>Sets the PvP mode. Valid types are: "normal", "always", "disabled".</summary>
-		[Description("Sets the PvP mode. Valid types are: \"normal\", \"always\" and \"disabled\".")]
+		/// <summary>Sets the PvP mode. Valid types are: "normal", "always", "pvpwithnoteam", "disabled".</summary>
+		[Description("Sets the PvP mode. Valid types are: \"normal\", \"always\", \"pvpwithnoteam\" and \"disabled\".")]
 		public string PvPMode = "normal";
 
 		/// <summary>Prevents tiles from being placed within SpawnProtectionRadius of the default spawn.</summary>
@@ -160,7 +164,7 @@ namespace TShockAPI.Configuration
 		/// <summary>Disables tombstone dropping during death for all players.</summary>
 		[Description("Disables tombstone dropping during death for all players.")]
 		public bool DisableTombstones = true;
-		
+
 		/// <summary>
 		/// Disables Skeletron Prime Bombs from spawning, useful for preventing unwanted world destruction on for the worthy seed world.
 		/// </summary>
@@ -275,6 +279,10 @@ namespace TShockAPI.Configuration
 		[Description("Determines the range in tiles that a bomb can affect tiles from detonation point.")]
 		public int BombExplosionRadius = 5;
 
+		/// <summary>If set to true, items given to players will be inserted directly into their inventory. Requires SSC. Otherwise, items given to players will spawn as dropped items.</summary>
+		[Description("If set to true, items given to players will be inserted directly into their inventory. Requires SSC. Otherwise, items given to players will spawn as dropped items. Experimental feature. May not work correctly or result in item loss.")]
+		public bool GiveItemsDirectly = false;
+
 		#endregion
 
 
@@ -310,7 +318,7 @@ namespace TShockAPI.Configuration
 
 		/// <summary>The reason given if banning a mediumcore player on death.</summary>
 		[Description("The reason given if banning a mediumcore player on death.")]
-		public string MediumcoreBanReason = "Death results in a ban";
+		public string MediumcoreBanReason = GetString("Death results in a ban");
 
 		/// <summary>Disbales IP bans by default, if no arguments are passed to the ban command.</summary>
 		[Description("Disbales IP bans by default, if no arguments are passed to the ban command.")]
@@ -322,15 +330,15 @@ namespace TShockAPI.Configuration
 
 		/// <summary>The reason given when kicking players for not being on the whitelist.</summary>
 		[Description("The reason given when kicking players for not being on the whitelist.")]
-		public string WhitelistKickReason = "You are not on the whitelist.";
+		public string WhitelistKickReason = GetString("You are not on the whitelist.");
 
 		/// <summary>The reason given when kicking players that attempt to join while the server is full.</summary>
 		[Description("The reason given when kicking players that attempt to join while the server is full.")]
-		public string ServerFullReason = "Server is full";
+		public string ServerFullReason = GetString("Server is full");
 
 		/// <summary>The reason given when kicking players that attempt to join while the server is full with no reserved slots available.</summary>
 		[Description("The reason given when kicking players that attempt to join while the server is full with no reserved slots available.")]
-		public string ServerFullNoReservedReason = "Server is full. No reserved slots open.";
+		public string ServerFullNoReservedReason = GetString("Server is full. No reserved slots open.");
 
 		/// <summary>Whether or not to kick hardcore players on death.</summary>
 		[Description("Whether or not to kick hardcore players on death.")]
@@ -338,7 +346,7 @@ namespace TShockAPI.Configuration
 
 		/// <summary>The reason given when kicking hardcore players on death.</summary>
 		[Description("The reason given when kicking hardcore players on death.")]
-		public string HardcoreKickReason = "Death results in a kick";
+		public string HardcoreKickReason = GetString("Death results in a kick");
 
 		/// <summary>Whether or not to ban hardcore players on death.</summary>
 		[Description("Whether or not to ban hardcore players on death.")]
@@ -346,7 +354,7 @@ namespace TShockAPI.Configuration
 
 		/// <summary>The reason given when banning hardcore players on death.</summary>
 		[Description("The reason given when banning hardcore players on death.")]
-		public string HardcoreBanReason = "Death results in a ban";
+		public string HardcoreBanReason = GetString("Death results in a ban");
 
 		/// <summary>If GeoIP is enabled, this will kick users identified as being under a proxy.</summary>
 		[Description("If GeoIP is enabled, this will kick users identified as being under a proxy.")]
@@ -485,7 +493,7 @@ namespace TShockAPI.Configuration
 
 		/// <summary>The superadmin chat prefix.</summary>
 		[Description("The superadmin chat prefix.")]
-		public string SuperAdminChatPrefix = "(Super Admin) ";
+		public string SuperAdminChatPrefix = GetString("(Super Admin) ");
 
 		/// <summary>The superadmin chat suffix.</summary>
 		[Description("The superadmin chat suffix.")]
@@ -631,14 +639,14 @@ namespace TShockAPI.Configuration
 
 				var def = field.GetValue(defaults);
 
-				sb.AppendLine("{0}  ".SFormat(name));
-				sb.AppendLine("Type: {0}  ".SFormat(type));
-				sb.AppendLine("Description: {0}  ".SFormat(desc));
-				sb.AppendLine("Default: \"{0}\"  ".SFormat(def));
+				sb.AppendLine($"## {name}  ");
+				sb.AppendLine($"{desc}");
+				sb.AppendLine(GetString("* **Field type**: `{0}`", type));
+				sb.AppendLine(GetString("* **Default**: `{0}`", def));
 				sb.AppendLine();
 			}
 
-			File.WriteAllText("ConfigDescriptions.txt", sb.ToString());
+			File.WriteAllText("docs/config-file-descriptions.md", sb.ToString());
 		}
 	}
 }
